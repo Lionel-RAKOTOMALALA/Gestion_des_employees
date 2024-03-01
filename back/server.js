@@ -6,7 +6,7 @@ const app = express();
 
 app.use(cors()); // Utilisez cors() au lieu de cors
 
-const connection = mysql.createConnection({
+const db = mysql.createConnection({
     host: "localhost",
     user: "root",
     password: "",
@@ -14,7 +14,7 @@ const connection = mysql.createConnection({
 });
 
 // Connectez-vous à la base de données
-connection.connect((err) => {
+db.connect((err) => {
     if (err) {
         console.error('Error connecting to database:', err);
         return;
@@ -23,7 +23,11 @@ connection.connect((err) => {
 });
 
 app.get("/", (req, res) => {
-    res.send("Hello from Back"); // Utilisez send() au lieu de json() pour envoyer un simple message
+   const sql = "SELECT * FROM employe";
+   db.query(sql, (err, data) =>{
+    if(err) return res.json("Error");
+    return res.json(data);
+   })
 });
 
 app.listen(8080, () => {
