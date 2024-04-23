@@ -1,81 +1,62 @@
-import React, { useEffect } from 'react';
-import axios from 'axios';
+import React from 'react';
 import { Modal, Form, Input, Button, message } from 'antd';
+import axios from 'axios';
 
-function EmployeForm({ isOpen, onClose, initialValues }) {
+const EmployeForm = ({ isOpen, onClose }) => {
   const [form] = Form.useForm();
 
-  useEffect(() => {
-    if (initialValues) {
-      form.setFieldsValue(initialValues);
-    } else {
+  const handleSubmit = async (values) => {
+    try {
+      // Envoyer les données du formulaire à l'API
+      const response = await axios.post('http://localhost:8080/create', values);
+      // Afficher un message de succès
+      message.success('L\'employé a été ajouté avec succès');
+      // Réinitialiser le formulaire et fermer le modal
       form.resetFields();
+      onClose();
+    } catch (error) {
+      // En cas d'erreur, afficher un message d'erreur
+      message.error('Une erreur est survenue lors de l\'ajout de l\'employé');
     }
-  }, [isOpen, initialValues, form]);
-
-  const handleInput = (e) => {
-    const { name, value } = e.target;
-    form.setFieldsValue({ [name]: value });
-  };
-
-  const onFinish = (values) => {
-    axios.post('http://127.0.0.1:8000/create', values)
-      .then((res) => {
-        if (res.data.error) {
-          message.error('Une erreur est survenue lors de la création de l\'employé');
-        } else {
-          message.success('Employé créé avec succès');
-          onClose();
-        }
-      })
-      .catch((error) => {
-        console.error('Error creating employe:', error);
-        message.error('Une erreur est survenue lors de la création de l\'employé');
-      });
   };
 
   return (
     <Modal
+      title="Ajouter un employé"
       visible={isOpen}
       onCancel={onClose}
-      title="Ajout d'employé"
       footer={null}
     >
-      <Form
-        form={form}
-        onFinish={onFinish}
-        labelCol={{ span: 8 }}
-        wrapperCol={{ span: 16 }}
-      >
+      <Form form={form} onFinish={handleSubmit}>
         <Form.Item
-          label="Nom"
+          label="Nom de l'employé"
           name="nom"
-          rules={[{ required: true, message: 'Veuillez saisir le nom' }]}
+          rules={[{ required: true, message: 'Veuillez saisir le nom de l\'employé' }]}
         >
-          <Input onChange={handleInput} />
+          <Input />
         </Form.Item>
         <Form.Item
-          label="Nombre de jours"
-          name="nbrJours"
-          rules={[{ required: true, message: 'Veuillez saisir le nombre de jours' }]}
+          label="Nombre de jours travaillés"
+          name="nbr_jours"
+          rules={[{ required: true, message: 'Veuillez saisir le nombre de jours travaillés' }]}
         >
-          <Input type="number" onChange={handleInput} />
+          <Input type="number" />
         </Form.Item>
         <Form.Item
           label="Taux journalier"
-          name="tauxJournalier"
+          name="taux_journalier"
           rules={[{ required: true, message: 'Veuillez saisir le taux journalier' }]}
         >
-          <Input type="number" onChange={handleInput} />
+          <Input type="number" />
         </Form.Item>
-        <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+        <Form.Item>
           <Button type="primary" htmlType="submit">
-            Ajouter
+            Ajouter l'employé
           </Button>
         </Form.Item>
       </Form>
     </Modal>
   );
-}
+};
 
 export default EmployeForm;
