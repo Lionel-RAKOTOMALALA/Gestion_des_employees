@@ -1,40 +1,40 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { Table, Button, Space, Spin, Modal } from "antd";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import EmployeForm from "./EmployeForm";
+import {useNavigate} from "react-router-dom";
 
 const { confirm } = Modal;
 
 const Employe = () => {
   const [employes, setEmployes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const tableRef = useRef(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [initialFormValues, setInitialFormValues] = useState(null);
+  const [totalSalary, setTotalSalary] = useState(0);
+  const [minSalary, setMinSalary] = useState(0);
+  const [maxSalary, setMaxSalary] = useState(0);
   const navigate = useNavigate();
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  const destroyDataTable = () => {
-    if (tableRef.current) {
-      tableRef.current = null;
-    }
-  };
-
-  const refreshData = async () => {
-    destroyDataTable();
-
+  const fetchData = async () => {
     try {
       const response = await axios.get("http://localhost:8080/");
       if (response.status === 200) {
-        setEmployes(response.data);
+        const { employees, totalSalary, minSalary, maxSalary } = response.data;
+        setEmployes(employees);
+        setTotalSalary(totalSalary);
+        setMinSalary(minSalary);
+        setMaxSalary(maxSalary);
         setIsLoading(false);
       }
     } catch (error) {
       console.error(error);
     }
   };
-
-  useEffect(() => {
-    refreshData();
-  }, []);
 
   const columns = [
     {
@@ -67,10 +67,16 @@ const Employe = () => {
       key: "action",
       render: (text, record) => (
         <Space size="middle">
-          <Button type="primary" onClick={() => navigate(`/employe/edit/${record.id}`)}>
+          <Button
+            type="primary"
+            onClick={() => navigate(`/employe/edit/${record.id}`)}
+          >
             Modifier
           </Button>
-          <Button type="danger" onClick={() => showDeleteConfirm(record.numEmp)}>
+          <Button
+            type="danger"
+            onClick={() => showDeleteConfirm(record.numEmp)}
+          >
             Supprimer
           </Button>
         </Space>
@@ -102,13 +108,13 @@ const Employe = () => {
         Modal.success({
           title: "Success",
           content: response.data.message,
-          onOk: refreshData,
+          onOk: fetchData,
         });
       } else if (response.status === 404) {
         Modal.error({
           title: "Erreur",
           content: response.data.message,
-          onOk: () => navigate("/employe"),
+          onOk: fetchData,
         });
       }
     } catch (error) {
@@ -116,23 +122,69 @@ const Employe = () => {
     }
   };
 
+  const handleOpenEditModal = () => {
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+  };
+
+  const handleAddEmploye = () => {
+    handleOpenEditModal();
+  };
+
   return (
     <div className="App">
       <div className="container">
         <div>
-          <Button type="primary" style={{ marginTop: "3%", marginLeft : "2%"}}>
+          <Button
+            type="primary"
+            style={{ marginTop: "3%", marginLeft: "2%" }}
+            onClick={handleAddEmploye}
+          >
             Ajouter
           </Button>
         </div>
-        <div style={{ boxShadow: "0 1px 4px rgba(0, 21, 41, 0.08)", marginBottom: "16px" }}>
-          <div style={{ padding: "16px 24px", borderBottom: "1px solid #ebedf0" }}>
-            <h6 className="m-0 font-weight-bold text-primary" style={{ fontSize: "24px", color: "#333" }}>Liste des employés</h6>
+        <div
+          style={{
+            boxShadow: "0 1px 4px rgba(0, 21, 41, 0.08)",
+            marginBottom: "16px",
+          }}
+        >
+          <div
+            style={{
+              padding: "16px 24px",
+              borderBottom: "1px solid #ebedf0",
+            }}
+          >
+            <h6
+              className="m-0 font-weight-bold text-primary"
+              style={{ fontSize: "24px", color: "#333" }}
+            >
+              Liste des employés
+            </h6>
+            <div>
+              <p>Total des salaires : {totalSalary}</p>
+              <p>Salaire minimum : {minSalary}</p>
+              <p>Salaire maximum : {maxSalary}</p>
+            </div>
           </div>
           <div style={{ padding: "24px" }}>
-            {isLoading ? <Spin size="large" /> : <Table columns={columns} dataSource={employes} />}
+            {isLoading ? (
+              <Spin size="large" />
+            ) : (
+              <Table columns={columns} dataSource={employes} />
+            )}
           </div>
         </div>
       </div>
+
+      <EmployeForm
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        initialValues={initialFormValues}
+      />
     </div>
   );
 };

@@ -23,50 +23,98 @@ db.connect((err) => {
 });
 
 app.get("/", (req, res) => {
-   const sql = "SELECT *, concat ((nbrJours * tauxJournalier),' ', 'Ariary') as salaire FROM employe;";
-   db.query(sql, (err, data) =>{
-    if(err) return res.json("Error");
-    return res.json(data);
-   })
-});
-
-app.get("/tot", (req, res) => {
-    const sql = "SELECT concat (sum(nbrJours * tauxJournalier),' ', 'Ariary') as salaire FROM employe;";
-    db.query(sql, (err, data) =>{
-     if(err) return res.json("Error");
-     return res.json(data);
-    })
- });
- app.get("/max", (req, res) => {
-     const sql = "SELECT concat (max(nbrJours * tauxJournalier),' ', 'Ariary') as salaire FROM employe;";
-     db.query(sql, (err, data) =>{
-      if(err) return res.json("Error");
-      return res.json(data);
-     })
+    // Première requête pour sélectionner toutes les données des employés
+    const sqlEmployees = "SELECT * FROM employe;";
+    
+    // Deuxième requête pour calculer la somme des salaires
+    const sqlTotalSalary = "SELECT SUM(nbrJours * tauxJournalier) AS totalSalary FROM employe;";
+    
+    // Troisième requête pour récupérer le salaire minimum
+    const sqlMinSalary = "SELECT CONCAT(MIN(nbrJours * tauxJournalier), ' Ariary') AS minSalary FROM employe;";
+    
+    // Quatrième requête pour récupérer le salaire maximum
+    const sqlMaxSalary = "SELECT CONCAT(MAX(nbrJours * tauxJournalier), ' Ariary') AS maxSalary FROM employe;";
+    
+    // Exécution de toutes les requêtes en parallèle
+    db.query(sqlEmployees, (errEmployees, dataEmployees) => {
+      if (errEmployees) return res.json({ error: "Error fetching employees data" });
+  
+      db.query(sqlTotalSalary, (errTotalSalary, dataTotalSalary) => {
+        if (errTotalSalary) return res.json({ error: "Error fetching total salary" });
+  
+        db.query(sqlMinSalary, (errMinSalary, dataMinSalary) => {
+          if (errMinSalary) return res.json({ error: "Error fetching minimum salary" });
+  
+          db.query(sqlMaxSalary, (errMaxSalary, dataMaxSalary) => {
+            if (errMaxSalary) return res.json({ error: "Error fetching maximum salary" });
+  
+            // Renvoyer les résultats dans un objet JSON
+            return res.json({
+              employees: dataEmployees,
+              totalSalary: dataTotalSalary[0].totalSalary,
+              minSalary: dataMinSalary[0].minSalary,
+              maxSalary: dataMaxSalary[0].maxSalary
+            });
+          });
+        });
+      });
+    });
   });
-  app.get("/min", (req, res) => {
-      const sql = "SELECT concat (min(nbrJours * tauxJournalier),' ', 'Ariary') as salaire FROM employe;";
-      db.query(sql, (err, data) =>{
-       if(err) return res.json("Error");
-       return res.json(data);
-      })
-   });
+  app.get("/", (req, res) => {
+    // Première requête pour sélectionner toutes les données des employés
+    const sqlEmployees = "SELECT * FROM employe;";
+    
+    // Deuxième requête pour calculer la somme des salaires
+    const sqlTotalSalary = "SELECT SUM(nbrJours * tauxJournalier) AS totalSalary FROM employe;";
+    
+    // Troisième requête pour récupérer le salaire minimum
+    const sqlMinSalary = "SELECT CONCAT(MIN(nbrJours * tauxJournalier), ' Ariary') AS minSalary FROM employe;";
+    
+    // Quatrième requête pour récupérer le salaire maximum
+    const sqlMaxSalary = "SELECT CONCAT(MAX(nbrJours * tauxJournalier), ' Ariary') AS maxSalary FROM employe;";
+    
+    // Exécution de toutes les requêtes en parallèle
+    db.query(sqlEmployees, (errEmployees, dataEmployees) => {
+      if (errEmployees) return res.json({ error: "Error fetching employees data" });
+  
+      db.query(sqlTotalSalary, (errTotalSalary, dataTotalSalary) => {
+        if (errTotalSalary) return res.json({ error: "Error fetching total salary" });
+  
+        db.query(sqlMinSalary, (errMinSalary, dataMinSalary) => {
+          if (errMinSalary) return res.json({ error: "Error fetching minimum salary" });
+  
+          db.query(sqlMaxSalary, (errMaxSalary, dataMaxSalary) => {
+            if (errMaxSalary) return res.json({ error: "Error fetching maximum salary" });
+  
+            // Renvoyer les résultats dans un objet JSON
+            return res.json({
+              employees: dataEmployees,
+              totalSalary: dataTotalSalary[0].totalSalary,
+              minSalary: dataMinSalary[0].minSalary,
+              maxSalary: dataMaxSalary[0].maxSalary
+            });
+          });
+        });
+      });
+    });
+  });
+    
 
  
-app.post('/create',(req,res) =>{
-    const sql = "INSERT INTO employe (nom, nbrJours, tauxJournalier) VALUES(?,?,?);"
+  app.post('/create', (req, res) => {
+    const sql = "INSERT INTO employe (nom, nbrJours, tauxJournalier) VALUES (?, ?, ?);";
     const values = [
         req.body.nom,
-        req.body.nbrJours, 
+        req.body.nbrJours,
         req.body.tauxJournalier
-    ]
-    db.query(sql,[values], (err, data) =>{
-        if(err) return res.json("Error");
+    ];
+    db.query(sql, values, (err, data) => {
+        if (err) return res.json(err);
         return res.json(data);
-    })    
-})
+    });
+});
 
 
 app.listen(8080, () => {
-    console.log("Server is listening on port 8081");
+    console.log("Server is listening on port 8080");
 });
